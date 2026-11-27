@@ -801,6 +801,18 @@
   </div>
 
   <!-- =====================================================
+       Floating Booking Button（右下角預約）
+       ===================================================== -->
+  <a href="https://calendar.app.google/zZLmY2qcj6vg8nt89" target="_blank" rel="noopener noreferrer"
+     x-show="!(cartOpen || checkoutOpen || mobileNavOpen)"
+     x-transition.opacity
+     class="group fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-ember px-5 py-3.5 font-bold text-white shadow-lift ring-4 ring-ember/20 transition hover:-translate-y-0.5 hover:bg-ember-dark focus:outline-none focus-visible:ring-ember-light sm:bottom-8 sm:right-8"
+     aria-label="線上預約（另開新視窗）">
+    <i class="fa-regular fa-calendar-check text-lg" aria-hidden="true"></i>
+    <span>線上預約</span>
+  </a>
+
+  <!-- =====================================================
        Toast Notifications
        ===================================================== -->
   <div class="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex flex-col items-center gap-2 px-4 sm:bottom-auto sm:left-auto sm:right-6 sm:top-24 sm:items-end" aria-live="polite">
