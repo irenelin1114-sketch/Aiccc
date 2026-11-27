@@ -80,18 +80,18 @@
     .steam:nth-child(3) { animation-delay: -2.2s; }
     @keyframes steam { 0% { opacity: 0; transform: translateY(6px) scaleY(.8); } 40% { opacity: .7; } 100% { opacity: 0; transform: translateY(-14px) scaleY(1.1); } }
     .walker { position: absolute; left: 0; bottom: 14%; animation: var(--dir) var(--dur) linear var(--delay) infinite; }
-    .walker svg { display: block; height: calc(46px * var(--s)); width: auto; overflow: visible; animation: walker-bob .45s ease-in-out infinite; }
+    .walker svg { display: block; height: calc(52px * var(--s)); width: auto; overflow: visible; animation: walker-bob .45s ease-in-out infinite; }
     .walker.to-left svg { transform: scaleX(-1); }
     .walker .leg { transform-box: view-box; animation: swing .6s ease-in-out infinite; }
     .walker .leg { --amp: 26deg; }
     .walker .back { animation-delay: -.3s; }
     .walker .far { opacity: .6; }
-    .walker .tail { transform-box: view-box; transform-origin: 15px 21px; animation: tail-sway 1.4s ease-in-out infinite; }
+    .walker .tail { transform-box: view-box; transform-origin: 13px 29px; animation: tail-sway 1.4s ease-in-out infinite; }
     @keyframes tail-sway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg); } }
     @keyframes walk-r { from { transform: translateX(-80px); } to { transform: translateX(calc(100vw + 80px)); } }
     @keyframes walk-l { from { transform: translateX(calc(100vw + 80px)); } to { transform: translateX(-80px); } }
     @keyframes swing { 0%, 100% { transform: rotate(var(--amp)); } 50% { transform: rotate(calc(var(--amp) * -1)); } }
-    @keyframes walker-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2px; } }
+    @keyframes walker-bob { 0%, 100% { translate: 0 0; rotate: -3deg; } 50% { translate: 0 -3px; rotate: 3deg; } }
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1; transform: none; transition: none; }
       .pin, .pulse-ring, .slow-zoom { animation: none; }
@@ -1296,36 +1296,43 @@
       if (!box) return;
       // 黑貓、三花貓、豹貓、俄羅斯藍貓
       var breeds = {
-        black:   { body: '#1F1B1B', eye: '#E8C547', spots: '' },
-        calico:  { body: '#F6F1E8', eye: '#D9A13A', spots: '<circle cx="24" cy="19" r="6" fill="#E07A2F"/><circle cx="35" cy="17" r="5" fill="#1F1B1B"/><circle cx="46" cy="11" r="3.5" fill="#E07A2F"/>' },
-        bengal:  { body: '#D39A50', eye: '#8DBF4A', spots: '<g fill="#5A3A1E"><circle cx="20" cy="20" r="1.8"/><circle cx="26" cy="17" r="2"/><circle cx="32" cy="21" r="1.8"/><circle cx="37" cy="17" r="2"/><circle cx="24" cy="24" r="1.5"/><circle cx="41" cy="22" r="1.5"/></g>' },
-        russian: { body: '#7E8B9C', eye: '#5FBF7F', spots: '' }
+        black:   { body: '#1F1B1B', eye: '#F2D04B', mouth: '#777', spots: '' },
+        calico:  { body: '#F6F1E8', eye: '#D9A13A', mouth: '#3E2A1E', spots: '<circle cx="19" cy="28" r="5.5" fill="#E07A2F"/><circle cx="29" cy="26" r="4.5" fill="#1F1B1B"/><circle cx="35" cy="13" r="4.5" fill="#E07A2F"/>' },
+        bengal:  { body: '#D9A35A', eye: '#8DBF4A', mouth: '#3E2A1E', spots: '<g fill="#5A3A1E"><circle cx="17" cy="28" r="1.7"/><circle cx="22" cy="25" r="1.9"/><circle cx="27" cy="29" r="1.7"/><circle cx="31" cy="25" r="1.6"/><circle cx="21" cy="32" r="1.4"/><circle cx="38" cy="9" r="1.3"/><circle cx="43" cy="8.5" r="1.3"/></g>' },
+        russian: { body: '#8794A6', eye: '#6CD08F', mouth: '#3E2A1E', spots: '' }
       };
       var cats = [
-        { b: 'black',   dir: 'r', dur: 20, delay: 0,  s: 1,    bag: true },
-        { b: 'calico',  dir: 'l', dur: 24, delay: 5,  s: .95 },
-        { b: 'bengal',  dir: 'r', dur: 18, delay: 9,  s: 1.05 },
-        { b: 'russian', dir: 'r', dur: 22, delay: 14, s: .75 },
-        { b: 'calico',  dir: 'l', dur: 19, delay: 12, s: 1,    bag: true },
-        { b: 'russian', dir: 'l', dur: 26, delay: 20, s: 1 },
-        { b: 'bengal',  dir: 'r', dur: 23, delay: 18, s: .8 }
+        { b: 'black',   dir: 'r', dur: 22, delay: 0,  s: 1,    bag: true },
+        { b: 'calico',  dir: 'l', dur: 26, delay: 5,  s: .95 },
+        { b: 'bengal',  dir: 'r', dur: 20, delay: 9,  s: 1.05 },
+        { b: 'russian', dir: 'r', dur: 24, delay: 14, s: .75 },
+        { b: 'calico',  dir: 'l', dur: 21, delay: 12, s: 1,    bag: true },
+        { b: 'russian', dir: 'l', dur: 28, delay: 20, s: 1 },
+        { b: 'bengal',  dir: 'r', dur: 25, delay: 18, s: .8 }
       ];
+      // Q 版：大頭、圓身體、短短的腳
       var leg = function (x, cls, c) {
-        return '<g class="leg ' + cls + '" style="transform-origin:' + x + 'px 26px"><line x1="' + x + '" y1="25" x2="' + x + '" y2="38" stroke="' + c + '" stroke-width="3.6" stroke-linecap="round"/></g>';
+        return '<g class="leg ' + cls + '" style="transform-origin:' + x + 'px 34px"><line x1="' + x + '" y1="34" x2="' + x + '" y2="41" stroke="' + c + '" stroke-width="5" stroke-linecap="round"/></g>';
+      };
+      var eye = function (x, b) {
+        return '<circle cx="' + x + '" cy="18" r="2.7" fill="' + b.eye + '"/><circle cx="' + x + '" cy="18.2" r="1.8" fill="#1A1414"/><circle cx="' + (x + 0.8) + '" cy="17.1" r="0.8" fill="#fff"/>';
       };
       box.innerHTML = cats.map(function (p) {
         var b = breeds[p.b], c = b.body;
         var tail = p.b === 'calico' ? '#E07A2F' : c;
-        var bag = p.bag ? '<path d="M53 17v-2h5v2" fill="none" stroke="#C2611B" stroke-width="1.2"/><rect x="51.5" y="17" width="8" height="8" rx="1.5" fill="#E07A2F"/>' : '';
+        var bag = p.bag ? '<path d="M44.5 26v-2h4v2" fill="none" stroke="#C2611B" stroke-width="1.1"/><rect x="43" y="26" width="7" height="7" rx="1.5" fill="#E07A2F"/>' : '';
         return '<div class="walker' + (p.dir === 'l' ? ' to-left' : '') + '" style="--dir:walk-' + p.dir + ';--dur:' + p.dur + 's;--delay:-' + p.delay + 's;--s:' + p.s + '">' +
-          '<svg viewBox="0 0 62 40">' +
-            leg(22, 'far', c) + leg(43, 'far back', c) +
-            '<g class="tail"><path d="M15 21 Q5 19 7 6" fill="none" stroke="' + tail + '" stroke-width="3.6" stroke-linecap="round"/></g>' +
-            '<ellipse cx="30" cy="21" rx="16" ry="7.5" fill="' + c + '"/>' + b.spots +
-            '<path d="M43 10 L44.5 1.5 L49 7 Z M50 7 L54.5 1.5 L55 10.5 Z" fill="' + (p.b === 'calico' ? '#1F1B1B' : c) + '"/>' +
-            '<circle cx="49" cy="13" r="7" fill="' + c + '"/>' + (p.b === 'calico' ? '<circle cx="46" cy="10" r="3.5" fill="#E07A2F"/>' : '') +
-            '<circle cx="52.5" cy="12" r="1.6" fill="' + b.eye + '"/>' +
-            leg(17, 'back', c) + leg(40, '', c) + bag +
+          '<svg viewBox="0 0 56 44">' +
+            leg(17, 'far', c) + leg(31, 'far back', c) +
+            '<g class="tail"><path d="M13 29 Q4 28 7 19" fill="none" stroke="' + tail + '" stroke-width="4.5" stroke-linecap="round"/></g>' +
+            '<ellipse cx="24" cy="30" rx="12.5" ry="8.5" fill="' + c + '"/>' +
+            leg(21, 'back', c) + leg(35, '', c) +
+            '<path d="M30 13 L31 2.5 L38.5 8 Z" fill="' + (p.b === 'calico' ? '#E07A2F' : c) + '"/><path d="M42 7.5 L50 2.5 L51 13 Z" fill="' + (p.b === 'calico' ? '#1F1B1B' : c) + '"/>' +
+            '<circle cx="40" cy="18" r="12" fill="' + c + '"/>' + b.spots +
+            eye(36.5, b) + eye(45.5, b) +
+            '<ellipse cx="33.5" cy="22.5" rx="2.2" ry="1.3" fill="#F4A3A3" opacity=".85"/><ellipse cx="48.5" cy="22.5" rx="2.2" ry="1.3" fill="#F4A3A3" opacity=".85"/>' +
+            '<circle cx="41" cy="20.6" r="0.9" fill="#E8879A"/><path d="M39 22 q1 1.3 2 0 q1 1.3 2 0" fill="none" stroke="' + b.mouth + '" stroke-width=".8" stroke-linecap="round"/>' +
+            bag +
           '</svg></div>';
       }).join('');
     })()
@@ -1451,8 +1458,8 @@
       var rand = function (a, b) { return a + Math.random() * (b - a); };
       var spotTex = canvasTex(256, 128, function (g, w, h) {
         g.fillStyle = '#D9A35A'; g.fillRect(0, 0, w, h);
-        for (var j = 0; j < 46; j++) {
-          var x = Math.random() * w, y = Math.random() * h, r = rand(5, 9);
+        for (var j = 0; j < 110; j++) {
+          var x = Math.random() * w, y = Math.random() * h, r = rand(2.5, 4.5);
           g.fillStyle = '#4A2E18'; g.beginPath(); g.ellipse(x, y, r * 1.3, r, 0, 0, Math.PI * 2); g.fill();
           g.fillStyle = '#B9783A'; g.beginPath(); g.ellipse(x + 1, y, r * 0.7, r * 0.5, 0, 0, Math.PI * 2); g.fill();
         }
@@ -1470,12 +1477,14 @@
         });
       };
       var calicoTexA = calicoTex(), calicoTexB = calicoTex();
-      var furMat = function (map) { return new THREE.MeshStandardMaterial({ map: map, roughness: 0.9, flatShading: true }); };
+      var furMat = function (map) { return new THREE.MeshStandardMaterial({ map: map, roughness: 0.9 }); };
+      // 貓咪用平滑材質，看起來更圓潤
+      var cmat = function (c) { return mat(c, { flatShading: false }); };
       var BREEDS = {
-        black:   function () { var m = mat('#1F1B1B'); return { body: m, head: m, legs: m, tail: m, muzzle: mat('#2B2525'), earL: m, earR: m, eye: '#E8C547' }; },
-        calico:  function () { var w = mat('#F6F1E8'); return { body: furMat(calicoTexA), head: furMat(calicoTexB), legs: w, tail: mat('#E07A2F'), muzzle: w, earL: mat('#E07A2F'), earR: mat('#1F1B1B'), eye: '#D9A13A' }; },
-        bengal:  function () { var f = furMat(spotTex), l = mat('#D39A50'); return { body: f, head: furMat(spotTex), legs: l, tail: mat('#B9783A'), muzzle: mat('#F0D9B5'), earL: l, earR: l, eye: '#9BC34A' }; },
-        russian: function () { var m = mat('#7E8B9C'); return { body: m, head: m, legs: m, tail: m, muzzle: mat('#8D9AAB'), earL: m, earR: m, eye: '#5FBF7F' }; }
+        black:   function () { var m = cmat('#1F1B1B'); return { body: m, head: m, legs: m, tail: m, muzzle: cmat('#2B2525'), earL: m, earR: m, eye: '#E8C547' }; },
+        calico:  function () { var w = cmat('#F6F1E8'); return { body: furMat(calicoTexA), head: furMat(calicoTexB), legs: w, paw: w, tail: cmat('#E07A2F'), muzzle: w, earL: cmat('#E07A2F'), earR: cmat('#1F1B1B'), eye: '#D9A13A' }; },
+        bengal:  function () { var f = furMat(spotTex), l = cmat('#D39A50'); return { body: f, head: furMat(spotTex), legs: l, tail: cmat('#B9783A'), muzzle: cmat('#F0D9B5'), earL: l, earR: l, eye: '#9BC34A' }; },
+        russian: function () { var m = cmat('#7E8B9C'); return { body: m, head: m, legs: m, tail: m, muzzle: cmat('#8D9AAB'), earL: m, earR: m, eye: '#5FBF7F' }; }
       };
       var breedOrder = ['black', 'calico', 'bengal', 'russian'];
 
@@ -1483,36 +1492,48 @@
         var breed = breedOrder[people.length % breedOrder.length], m = BREEDS[breed]();
         var root = new THREE.Group(), body = new THREE.Group(); root.add(body);
         var part = function (geo, mm, x, y, z, parent) { var me = new THREE.Mesh(geo, mm); me.position.set(x, y, z); me.castShadow = true; (parent || body).add(me); return me; };
-        // 身體與頭
-        var torso = part(new THREE.CapsuleGeometry(0.25, 0.55, 4, 10), m.body, 0, 0.64, 0); torso.rotation.x = Math.PI / 2;
-        var head = new THREE.Group(); head.position.set(0, 0.95, 0.52); body.add(head);
-        part(new THREE.SphereGeometry(0.26, 14, 10), m.head, 0, 0, 0, head).scale.set(1.06, 0.92, 0.95);
-        part(new THREE.SphereGeometry(0.11, 10, 8), m.muzzle, 0, -0.07, 0.2, head).scale.set(1.35, 0.8, 0.8);
-        part(new THREE.SphereGeometry(0.032, 6, 5), mat('#E89A9A'), 0, -0.03, 0.29, head);
-        var eyeM = mat(m.eye, { emissive: m.eye, emissiveIntensity: 0.25, roughness: 0.3 }), pupilM = mat('#111111');
+        var round = function (r) { return new THREE.SphereGeometry(r, 18, 14); };
+        // Q 版：圓滾滾的身體
+        part(round(0.32), m.body, 0, 0.44, -0.02).scale.set(0.95, 0.85, 1.15);
+        // 大頭
+        var head = new THREE.Group(); head.position.set(0, 0.9, 0.26); body.add(head);
+        part(round(0.4), m.head, 0, 0, 0, head).scale.set(1.12, 0.95, 0.95);
+        part(round(0.1), m.muzzle, 0, -0.12, 0.32, head).scale.set(1.5, 0.85, 0.7);
+        part(round(0.035), cmat('#E8879A'), 0, -0.06, 0.38, head);
+        var eyeM = mat(m.eye, { roughness: 0.25, flatShading: false }), pupilM = mat('#1A1414', { roughness: 0.2, flatShading: false }), shineM = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+        var blushM = mat('#F4A3A3', { flatShading: false });
         [-1, 1].forEach(function (k) {
-          part(new THREE.SphereGeometry(0.058, 10, 8), eyeM, k * 0.105, 0.04, 0.2, head);
-          part(new THREE.SphereGeometry(0.03, 8, 6), pupilM, k * 0.105, 0.04, 0.25, head).scale.set(0.6, 1.5, 0.6);
-          var ear = part(new THREE.ConeGeometry(0.1, 0.22, 4), k < 0 ? m.earL : m.earR, k * 0.15, 0.24, -0.03, head);
-          ear.rotation.z = -k * 0.3;
+          // 大眼睛 + 反光點
+          part(round(0.085), eyeM, k * 0.16, 0.03, 0.31, head).scale.set(1, 1.15, 0.55);
+          part(round(0.062), pupilM, k * 0.16, 0.025, 0.345, head).scale.set(1, 1.2, 0.5);
+          part(round(0.022), shineM, k * 0.16 + 0.025, 0.07, 0.375, head);
+          // 腮紅
+          part(round(0.055), blushM, k * 0.26, -0.1, 0.27, head).scale.set(1.1, 0.6, 0.35);
+          // 圓圓的耳朵
+          var ear = part(new THREE.ConeGeometry(0.14, 0.24, 10), k < 0 ? m.earL : m.earR, k * 0.23, 0.33, -0.04, head);
+          ear.rotation.z = -k * 0.35;
+          var inner = part(new THREE.ConeGeometry(0.075, 0.14, 8), cmat('#F4B6B6'), k * 0.225, 0.31, 0.03, head);
+          inner.rotation.z = -k * 0.35;
         });
-        // 四隻腳（對角線同步）
-        var legs = [[-0.14, 0.32], [0.14, 0.32], [-0.14, -0.32], [0.14, -0.32]].map(function (xz) {
-          var g = new THREE.Group(); g.position.set(xz[0], 0.46, xz[1]); body.add(g);
-          part(new THREE.CylinderGeometry(0.075, 0.065, 0.46, 8), m.legs, 0, -0.23, 0, g);
+        // 短短的四隻腳 + 圓腳掌
+        var legs = [[-0.15, 0.2], [0.15, 0.2], [-0.15, -0.22], [0.15, -0.22]].map(function (xz) {
+          var g = new THREE.Group(); g.position.set(xz[0], 0.24, xz[1]); body.add(g);
+          part(new THREE.CylinderGeometry(0.09, 0.09, 0.18, 10), m.legs, 0, -0.1, 0, g);
+          part(round(0.1), m.paw || m.legs, 0, -0.19, 0.02, g).scale.set(1, 0.7, 1.15);
           return g;
         });
-        // 尾巴：三節，往上彎
-        var tail = new THREE.Group(); tail.position.set(0, 0.74, -0.52); tail.rotation.x = -0.9; body.add(tail);
+        // 短胖尾巴
+        var tail = new THREE.Group(); tail.position.set(0, 0.5, -0.36); tail.rotation.x = -0.7; body.add(tail);
         var seg = tail;
-        for (var j = 0; j < 3; j++) {
-          part(new THREE.CylinderGeometry(0.05, 0.055, 0.26, 6), m.tail, 0, 0.13, 0, seg);
-          var next = new THREE.Group(); next.position.y = 0.25; next.rotation.x = -0.35; seg.add(next); seg = next;
+        for (var j = 0; j < 2; j++) {
+          part(new THREE.CylinderGeometry(0.07, 0.08, 0.22, 10), m.tail, 0, 0.11, 0, seg);
+          var next = new THREE.Group(); next.position.y = 0.21; next.rotation.x = -0.6; seg.add(next); seg = next;
         }
+        part(round(0.075), m.tail, 0, 0.02, 0, seg);
         // 嘴裡叼的外帶袋
-        var bag = new THREE.Group(); bag.position.set(0, -0.14, 0.3); head.add(bag);
-        part(new THREE.BoxGeometry(0.3, 0.28, 0.14), mat('#E07A2F'), 0, -0.2, 0, bag);
-        part(new THREE.BoxGeometry(0.03, 0.1, 0.03), mat('#C2611B'), 0, -0.03, 0, bag);
+        var bag = new THREE.Group(); bag.position.set(0, -0.2, 0.38); head.add(bag);
+        part(new THREE.BoxGeometry(0.26, 0.24, 0.12), cmat('#E07A2F'), 0, -0.17, 0, bag);
+        part(new THREE.BoxGeometry(0.03, 0.08, 0.03), cmat('#C2611B'), 0, -0.03, 0, bag);
         scene.add(root);
         return { root: root, body: body, head: head, legs: legs, tail: tail, bag: bag, mats: collectMats(root) };
       }
@@ -1547,7 +1568,7 @@
         var n = count();
         while (people.length < n) {
           var p = makePerson(); p.small = Math.random() < 0.2;
-          p.root.scale.setScalar(p.small ? 0.75 : rand(1.05, 1.2));
+          p.root.scale.setScalar(p.small ? 0.9 : rand(1.2, 1.35));
           p.phase = rand(0, 6); spawn(p, true); people.push(p);
         }
         people.forEach(function (p, idx) { p.root.visible = idx < n && p.state !== 'inside'; p.active = idx < n; });
@@ -1581,12 +1602,15 @@
         var nearDoor = Math.abs(pos.x - doorX) < 0.7 && pos.z < 0.55;
         setOpacity(p, nearDoor ? Math.max(0, Math.min(1, (pos.z + 0.3) / 0.75)) : 1);
         // 走路擺動
-        p.phase += dt * p.speed * 8;
+        p.phase += dt * p.speed * 9;
         var s = Math.sin(p.phase);
-        p.legs[0].rotation.x = s * 0.5; p.legs[3].rotation.x = s * 0.5;
-        p.legs[1].rotation.x = -s * 0.5; p.legs[2].rotation.x = -s * 0.5;
-        p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.03;
-        p.head.rotation.x = Math.sin(p.phase * 2) * 0.04;
+        p.legs[0].rotation.x = s * 0.6; p.legs[3].rotation.x = s * 0.6;
+        p.legs[1].rotation.x = -s * 0.6; p.legs[2].rotation.x = -s * 0.6;
+        // 蹦蹦跳跳、左右搖擺
+        p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.06;
+        p.body.rotation.z = s * 0.07;
+        p.head.rotation.x = Math.sin(p.phase * 2) * 0.05;
+        p.head.rotation.z = -s * 0.05;
         p.tail.rotation.z = Math.sin(p.phase * 0.35) * 0.35;
       }
 
