@@ -739,6 +739,10 @@
 
       <!-- 訂單表單 -->
       <form x-show="!orderDone" @submit.prevent="submitOrder()" novalidate>
+        <!-- 防機器人欄位：真人看不到，請勿移除 -->
+        <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+          <label>請勿填寫 <input type="text" tabindex="-1" autocomplete="off" x-model="form.website"></label>
+        </div>
         <div class="sticky top-0 z-10 flex items-center justify-between border-b border-sand bg-cream/95 px-6 py-5 backdrop-blur">
           <h2 id="checkout-title" class="font-serif text-xl font-black">確認訂單</h2>
           <button type="button" class="grid h-10 w-10 place-items-center rounded-full hover:bg-sand/60" @click="checkoutOpen = false" aria-label="關閉"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -843,7 +847,7 @@
             <i class="fa-solid" :class="submitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
             <span x-text="submitting ? '訂單建立中…' : '確認送出訂單'"></span>
           </button>
-          <p class="mt-2 text-center text-[11px] text-wood-light">此為示範網站，不會進行實際付款或送單。</p>
+          <p class="mt-2 text-center text-[11px] text-wood-light" x-text="ORDER_API_URL ? '送出後門市將以電話與您確認訂單，取餐或收貨時付款。' : '此為示範網站，不會進行實際付款或送單。'"></p>
         </div>
       </form>
 
@@ -921,6 +925,14 @@
     /* ---------------------------------------------------------
        主要 Alpine 元件：購物車、菜單、門市、結帳
        --------------------------------------------------------- */
+    /* =========================================================
+       訂單 API：Google Apps Script 網頁應用程式網址
+       部署方式請見 gas/README.md；部署後把網址貼在下方引號內
+       （以 https://script.google.com/macros/s/ 開頭、/exec 結尾）。
+       留空 = 示範模式，不會真的送單。
+       ========================================================= */
+    var ORDER_API_URL = '';
+
     function shop() {
       var STORAGE_KEY = 'jianxin-cart-v1';
       var IMG = {
@@ -941,6 +953,7 @@
 
       return {
         /* ---------- 常數 ---------- */
+        ORDER_API_URL: ORDER_API_URL,
         FREE_SHIPPING: 1500,
         SHIPPING_FEE: 160,
 
@@ -1034,7 +1047,7 @@
 
         /* ---------- 購物車與表單 ---------- */
         cart: [],
-        form: { type: 'takeout', name: '', phone: '', email: '', storeId: 'flagship', time: '', address: '', note: '' },
+        form: { type: 'takeout', name: '', phone: '', email: '', storeId: 'flagship', time: '', address: '', note: '', website: '' },
         errors: {},
         lastOrder: {},
 
@@ -1210,34 +1223,74 @@
           return Object.keys(e).length === 0;
         },
         submitOrder: function () {
+          if (this.submitting) return;
           if (this.form.type === 'delivery' && this.hasFreshItems) return;
           if (!this.validate()) { this.showToast('請檢查標示紅色的欄位', 'info'); return; }
           var self = this;
-          this.submitting = true;
-          setTimeout(function () {
-            var f = self.form;
-            var store = self.stores.find(function (s) { return s.id === f.storeId; }) || self.stores[0];
-            var d = new Date();
-            var typeLabel = self.orderTypes.find(function (o) { return o.id === f.type; }).label;
+          var f = this.form;
+          var store = this.stores.find(function (s) { return s.id === f.storeId; }) || this.stores[0];
+          var typeLabel = this.orderTypes.find(function (o) { return o.id === f.type; }).label;
+          var done = function (no, total) {
             self.lastOrder = {
-              no: 'JX' + d.getFullYear().toString().slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.floor(1000 + Math.random() * 9000),
+              no: no,
               type: f.type,
               typeLabel: typeLabel,
               where: f.type === 'delivery' ? f.address : store.name + '（' + store.address + '）',
               time: f.type === 'delivery' ? '' : f.time,
-              total: self.grandTotal
+              total: total
             };
             self.cart = [];
             self.submitting = false;
             self.orderDone = true;
-          }, 900);
+          };
+          this.submitting = true;
+
+          // 尚未設定 Google Apps Script 網址：維持示範模式
+          if (!ORDER_API_URL) {
+            setTimeout(function () {
+              var d = new Date();
+              done('JX' + d.getFullYear().toString().slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.floor(1000 + Math.random() * 9000), self.grandTotal);
+            }, 900);
+            return;
+          }
+
+          // 送到 Google Apps Script，寫入 Google Sheet
+          var payload = {
+            type: f.type, name: f.name, phone: f.phone, email: f.email,
+            storeId: f.type === 'delivery' ? '' : f.storeId,
+            time: f.type === 'delivery' ? '' : f.time,
+            address: f.type === 'delivery' ? f.address : '',
+            note: f.note,
+            items: this.cart.map(function (l) { return { id: l.id, qty: l.qty }; }),
+            clientTotal: this.grandTotal,
+            website: f.website || ''
+          };
+          var ctrl = window.AbortController ? new AbortController() : null;
+          var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 25000);
+          fetch(ORDER_API_URL, {
+            method: 'POST',
+            // 使用 text/plain 避免瀏覽器的 CORS 預檢（Apps Script 不支援 OPTIONS）
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+            signal: ctrl ? ctrl.signal : undefined
+          }).then(function (res) { return res.json(); }).then(function (r) {
+            clearTimeout(timer);
+            if (!r || !r.ok) throw new Error((r && r.error) || '訂單送出失敗');
+            if (r.total !== payload.clientTotal) self.showToast('金額已依最新價格更新為 NT$' + r.total.toLocaleString(), 'info');
+            done(r.orderNo, r.total);
+          }).catch(function (err) {
+            clearTimeout(timer);
+            self.submitting = false;
+            var msg = err && err.name === 'AbortError' ? '連線逾時，請稍後再試' : (err && err.message && !/fetch|network|JSON/i.test(err.message) ? err.message : '網路連線失敗，請稍後再試');
+            self.showToast(msg, 'info');
+          });
         },
         finishOrder: function () {
           this.checkoutOpen = false;
           var self = this;
           setTimeout(function () {
             self.orderDone = false;
-            self.form = { type: 'takeout', name: '', phone: '', email: '', storeId: 'flagship', time: '', address: '', note: '' };
+            self.form = { type: 'takeout', name: '', phone: '', email: '', storeId: 'flagship', time: '', address: '', note: '', website: '' };
           }, 300);
         },
         closeAll: function () {
