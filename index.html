@@ -1271,7 +1271,7 @@
     }
   </script>
   <script>
-    /* 動畫播放／暫停：系統開啟「減少動態效果」時預設暫停，可按按鈕播放 */
+    /* 動畫播放／暫停：一律自動播放，可按按鈕暫停 */
     (function () {
       var section = document.querySelector('section.street');
       var btn = document.getElementById('street-toggle');
@@ -1282,7 +1282,6 @@
         btn.querySelector('i').className = 'fa-solid ' + (paused ? 'fa-play' : 'fa-pause');
         btn.querySelector('span').textContent = paused ? '播放動畫' : '暫停動畫';
       };
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) section.classList.add('is-paused');
       render();
       btn.addEventListener('click', function () {
         section.classList.toggle('is-paused');
