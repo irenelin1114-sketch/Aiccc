@@ -72,6 +72,7 @@
     .street.is-3d { height: 300px; background: #EFE5D6; }
     @media (min-width: 768px) { .street.is-3d { height: 380px; } }
     .street.is-3d .street-shop, .street.is-3d #street-walkers { display: none; }
+    .street.is-paused *, .street.is-paused .walker { animation-play-state: paused !important; }
     .street-3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
     .street-shop { position: absolute; left: 50%; bottom: 22%; width: 240px; transform: translateX(-50%); }
     .steam { animation: steam 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom; }
@@ -92,7 +93,6 @@
     @keyframes swing { 0%, 100% { transform: rotate(var(--amp)); } 50% { transform: rotate(calc(var(--amp) * -1)); } }
     @keyframes walker-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2px; } }
     @media (prefers-reduced-motion: reduce) {
-      .street *, .walker { animation-play-state: paused !important; }
       .reveal { opacity: 1; transform: none; transition: none; }
       .pin, .pulse-ring, .slow-zoom { animation: none; }
       html { scroll-behavior: auto; }
@@ -248,6 +248,9 @@
       </svg>
       <div id="street-walkers" aria-hidden="true"></div>
       <canvas id="street-3d" class="street-3d" hidden aria-hidden="true"></canvas>
+      <button type="button" id="street-toggle" class="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-wood/80 px-3 py-1.5 text-xs font-bold text-cream shadow-soft backdrop-blur transition hover:bg-wood" aria-pressed="false">
+        <i class="fa-solid fa-pause" aria-hidden="true"></i><span>暫停動畫</span>
+      </button>
       <p class="absolute inset-x-0 bottom-2 z-10 text-center font-serif text-xs tracking-[0.3em] text-wood-light">每天，都有貓咪為了這一口而來</p>
     </section>
 
@@ -1268,6 +1271,26 @@
     }
   </script>
   <script>
+    /* 動畫播放／暫停：系統開啟「減少動態效果」時預設暫停，可按按鈕播放 */
+    (function () {
+      var section = document.querySelector('section.street');
+      var btn = document.getElementById('street-toggle');
+      if (!section || !btn) return;
+      var render = function () {
+        var paused = section.classList.contains('is-paused');
+        btn.setAttribute('aria-pressed', String(paused));
+        btn.querySelector('i').className = 'fa-solid ' + (paused ? 'fa-play' : 'fa-pause');
+        btn.querySelector('span').textContent = paused ? '播放動畫' : '暫停動畫';
+      };
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) section.classList.add('is-paused');
+      render();
+      btn.addEventListener('click', function () {
+        section.classList.toggle('is-paused');
+        render();
+        section.dispatchEvent(new Event('street-toggle'));
+      });
+    })();
+
     /* 人來人往：產生貓咪（2D 備援版） */
     (function () {
       var box = document.getElementById('street-walkers');
@@ -1324,7 +1347,6 @@
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       var scene = new THREE.Scene();
       scene.background = new THREE.Color('#EFE5D6');
       scene.fog = new THREE.Fog('#EFE5D6', 22, 45);
@@ -1600,7 +1622,7 @@
         renderer.render(scene, camera);
         if (running) rafId = requestAnimationFrame(frame);
       }
-      function play() { if (running || reduceMotion) return; running = true; clock.getDelta(); rafId = requestAnimationFrame(frame); }
+      function play() { if (running) return; running = true; clock.getDelta(); rafId = requestAnimationFrame(frame); }
       function pause() { running = false; cancelAnimationFrame(rafId); }
 
       canvas.hidden = false;
@@ -1608,13 +1630,14 @@
       resize();
       new ResizeObserver(function () { resize(); if (!running) renderer.render(scene, camera); }).observe(section);
 
-      if (reduceMotion) {
-        // 不播放動畫：只畫一張靜態畫面
-        for (i = 0; i < 40; i++) { people.forEach(function (p) { update(p, 0.05); }); }
-        renderer.render(scene, camera);
-        return;
-      }
-      new IntersectionObserver(function (entries) { entries[0].isIntersecting ? play() : pause(); }).observe(section);
+      // 先跑幾步讓貓咪散開，暫停時也有一張好看的靜態畫面
+      for (i = 0; i < 40; i++) { people.forEach(function (p) { update(p, 0.05); }); }
+      renderer.render(scene, camera);
+
+      var inView = false;
+      var refresh = function () { inView && !section.classList.contains('is-paused') ? play() : pause(); };
+      section.addEventListener('street-toggle', refresh);
+      new IntersectionObserver(function (entries) { inView = entries[0].isIntersecting; refresh(); }).observe(section);
     }
   </script>
 </body>
