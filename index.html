@@ -79,12 +79,14 @@
     .steam:nth-child(3) { animation-delay: -2.2s; }
     @keyframes steam { 0% { opacity: 0; transform: translateY(6px) scaleY(.8); } 40% { opacity: .7; } 100% { opacity: 0; transform: translateY(-14px) scaleY(1.1); } }
     .walker { position: absolute; left: 0; bottom: 14%; animation: var(--dir) var(--dur) linear var(--delay) infinite; }
-    .walker svg { display: block; height: calc(92px * var(--s)); width: auto; overflow: visible; animation: walker-bob .45s ease-in-out infinite; }
+    .walker svg { display: block; height: calc(46px * var(--s)); width: auto; overflow: visible; animation: walker-bob .45s ease-in-out infinite; }
     .walker.to-left svg { transform: scaleX(-1); }
-    .walker .leg, .walker .arm { transform-box: view-box; animation: swing .9s ease-in-out infinite; }
-    .walker .leg { transform-origin: 20px 56px; --amp: 24deg; }
-    .walker .arm { transform-origin: 20px 26px; --amp: -20deg; }
-    .walker .back { animation-delay: -.45s; opacity: .55; }
+    .walker .leg { transform-box: view-box; animation: swing .6s ease-in-out infinite; }
+    .walker .leg { --amp: 26deg; }
+    .walker .back { animation-delay: -.3s; }
+    .walker .far { opacity: .6; }
+    .walker .tail { transform-box: view-box; transform-origin: 15px 21px; animation: tail-sway 1.4s ease-in-out infinite; }
+    @keyframes tail-sway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg); } }
     @keyframes walk-r { from { transform: translateX(-80px); } to { transform: translateX(calc(100vw + 80px)); } }
     @keyframes walk-l { from { transform: translateX(calc(100vw + 80px)); } to { transform: translateX(-80px); } }
     @keyframes swing { 0%, 100% { transform: rotate(var(--amp)); } 50% { transform: rotate(calc(var(--amp) * -1)); } }
@@ -227,7 +229,7 @@
     <!-- =====================================================
          人來人往動畫
          ===================================================== -->
-    <section class="street" role="img" aria-label="煎心鍋貼店門口人來人往的動畫">
+    <section class="street" role="img" aria-label="貓咪們在煎心鍋貼店門口來來往往、進店買鍋貼的動畫">
       <svg class="street-shop" viewBox="0 0 240 150" aria-hidden="true">
         <g fill="#F7F1E8" opacity=".9">
           <path class="steam" d="M92 34c-6-8 6-12 0-20" fill="none" stroke="#6B4A33" stroke-width="3" stroke-linecap="round"/>
@@ -246,7 +248,7 @@
       </svg>
       <div id="street-walkers" aria-hidden="true"></div>
       <canvas id="street-3d" class="street-3d" hidden aria-hidden="true"></canvas>
-      <p class="absolute inset-x-0 bottom-2 z-10 text-center font-serif text-xs tracking-[0.3em] text-wood-light">每天，都有人為了這一口而來</p>
+      <p class="absolute inset-x-0 bottom-2 z-10 text-center font-serif text-xs tracking-[0.3em] text-wood-light">每天，都有貓咪為了這一口而來</p>
     </section>
 
     <!-- =====================================================
@@ -1266,34 +1268,47 @@
     }
   </script>
   <script>
-    /* 人來人往：產生行人 */
+    /* 人來人往：產生貓咪（2D 備援版） */
     (function () {
       var box = document.getElementById('street-walkers');
       if (!box) return;
-      var people = [
-        { dir: 'r', dur: 22, delay: 0,   s: 1,    c: '#3E2A1E', bag: true },
-        { dir: 'l', dur: 26, delay: 5,   s: .95,  c: '#6B4A33' },
-        { dir: 'r', dur: 19, delay: 9,   s: .7,   c: '#C2611B' },
-        { dir: 'r', dur: 24, delay: 14,  s: 1.05, c: '#6B4A33' },
-        { dir: 'l', dur: 21, delay: 12,  s: 1,    c: '#3E2A1E', bag: true },
-        { dir: 'l', dur: 28, delay: 20,  s: .9,   c: '#C2611B' },
-        { dir: 'r', dur: 25, delay: 18,  s: .95,  c: '#2A1C13' }
-      ];
-      var limb = function (cls, y1, y2) {
-        return '<g class="' + cls + '"><line x1="20" y1="' + y1 + '" x2="20" y2="' + y2 + '" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>';
+      // 黑貓、三花貓、豹貓、俄羅斯藍貓
+      var breeds = {
+        black:   { body: '#1F1B1B', eye: '#E8C547', spots: '' },
+        calico:  { body: '#F6F1E8', eye: '#D9A13A', spots: '<circle cx="24" cy="19" r="6" fill="#E07A2F"/><circle cx="35" cy="17" r="5" fill="#1F1B1B"/><circle cx="46" cy="11" r="3.5" fill="#E07A2F"/>' },
+        bengal:  { body: '#D39A50', eye: '#8DBF4A', spots: '<g fill="#5A3A1E"><circle cx="20" cy="20" r="1.8"/><circle cx="26" cy="17" r="2"/><circle cx="32" cy="21" r="1.8"/><circle cx="37" cy="17" r="2"/><circle cx="24" cy="24" r="1.5"/><circle cx="41" cy="22" r="1.5"/></g>' },
+        russian: { body: '#7E8B9C', eye: '#5FBF7F', spots: '' }
       };
-      box.innerHTML = people.map(function (p) {
-        var bag = p.bag ? '<rect x="14" y="48" width="12" height="13" rx="2" fill="#E07A2F"/><path d="M17 48v-3h6v3" fill="none" stroke="#E07A2F" stroke-width="1.5"/>' : '';
-        return '<div class="walker' + (p.dir === 'l' ? ' to-left' : '') + '" style="--dir:walk-' + p.dir + ';--dur:' + p.dur + 's;--delay:-' + p.delay + 's;--s:' + p.s + ';color:' + p.c + '">' +
-          '<svg viewBox="0 0 40 100">' +
-            limb('leg back', 56, 94) + '</g>' + limb('arm back', 26, 50) + '</g>' +
-            '<circle cx="20" cy="11" r="8" fill="currentColor"/><rect x="13" y="21" width="14" height="37" rx="7" fill="currentColor"/>' +
-            limb('leg', 56, 94) + '</g>' + limb('arm', 26, 50) + bag + '</g>' +
+      var cats = [
+        { b: 'black',   dir: 'r', dur: 20, delay: 0,  s: 1,    bag: true },
+        { b: 'calico',  dir: 'l', dur: 24, delay: 5,  s: .95 },
+        { b: 'bengal',  dir: 'r', dur: 18, delay: 9,  s: 1.05 },
+        { b: 'russian', dir: 'r', dur: 22, delay: 14, s: .75 },
+        { b: 'calico',  dir: 'l', dur: 19, delay: 12, s: 1,    bag: true },
+        { b: 'russian', dir: 'l', dur: 26, delay: 20, s: 1 },
+        { b: 'bengal',  dir: 'r', dur: 23, delay: 18, s: .8 }
+      ];
+      var leg = function (x, cls, c) {
+        return '<g class="leg ' + cls + '" style="transform-origin:' + x + 'px 26px"><line x1="' + x + '" y1="25" x2="' + x + '" y2="38" stroke="' + c + '" stroke-width="3.6" stroke-linecap="round"/></g>';
+      };
+      box.innerHTML = cats.map(function (p) {
+        var b = breeds[p.b], c = b.body;
+        var tail = p.b === 'calico' ? '#E07A2F' : c;
+        var bag = p.bag ? '<path d="M53 17v-2h5v2" fill="none" stroke="#C2611B" stroke-width="1.2"/><rect x="51.5" y="17" width="8" height="8" rx="1.5" fill="#E07A2F"/>' : '';
+        return '<div class="walker' + (p.dir === 'l' ? ' to-left' : '') + '" style="--dir:walk-' + p.dir + ';--dur:' + p.dur + 's;--delay:-' + p.delay + 's;--s:' + p.s + '">' +
+          '<svg viewBox="0 0 62 40">' +
+            leg(22, 'far', c) + leg(43, 'far back', c) +
+            '<g class="tail"><path d="M15 21 Q5 19 7 6" fill="none" stroke="' + tail + '" stroke-width="3.6" stroke-linecap="round"/></g>' +
+            '<ellipse cx="30" cy="21" rx="16" ry="7.5" fill="' + c + '"/>' + b.spots +
+            '<path d="M43 10 L44.5 1.5 L49 7 Z M50 7 L54.5 1.5 L55 10.5 Z" fill="' + (p.b === 'calico' ? '#1F1B1B' : c) + '"/>' +
+            '<circle cx="49" cy="13" r="7" fill="' + c + '"/>' + (p.b === 'calico' ? '<circle cx="46" cy="10" r="3.5" fill="#E07A2F"/>' : '') +
+            '<circle cx="52.5" cy="12" r="1.6" fill="' + b.eye + '"/>' +
+            leg(17, 'back', c) + leg(40, '', c) + bag +
           '</svg></div>';
       }).join('');
-    })();
+    })()
   </script>
-  <!-- 人來人往 3D 版（Three.js）；載入失敗或不支援 WebGL 時保留上方 2D 動畫 -->
+  <!-- 貓咪來來往往 3D 版（Three.js）；載入失敗或不支援 WebGL 時保留上方 2D 動畫 -->
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
@@ -1410,28 +1425,75 @@
         scene.add(pm); puffs.push({ mesh: pm, t: i / 6 });
       }
 
-      /* ---------- 行人 ---------- */
-      var shirts = ['#3E2A1E', '#6B4A33', '#C2611B', '#E07A2F', '#8A6A52', '#4F6B5E', '#7A3B2E', '#5B6B8A'];
-      var pantsC = ['#2A1C13', '#3B3B46', '#4A3A2E', '#6B5B4A'];
-      var skins = ['#EBC9A6', '#D9A982', '#C58C64', '#F0D3B5'];
+      /* ---------- 貓咪：黑貓、三花貓、豹貓、俄羅斯藍貓 ---------- */
       var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
       var rand = function (a, b) { return a + Math.random() * (b - a); };
+      var spotTex = canvasTex(256, 128, function (g, w, h) {
+        g.fillStyle = '#D9A35A'; g.fillRect(0, 0, w, h);
+        for (var j = 0; j < 46; j++) {
+          var x = Math.random() * w, y = Math.random() * h, r = rand(5, 9);
+          g.fillStyle = '#4A2E18'; g.beginPath(); g.ellipse(x, y, r * 1.3, r, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = '#B9783A'; g.beginPath(); g.ellipse(x + 1, y, r * 0.7, r * 0.5, 0, 0, Math.PI * 2); g.fill();
+        }
+      });
+      var calicoTex = function () {
+        return canvasTex(256, 128, function (g, w, h) {
+          g.fillStyle = '#F6F1E8'; g.fillRect(0, 0, w, h);
+          [['#E07A2F', 4], ['#1F1B1B', 3]].forEach(function (c) {
+            for (var j = 0; j < c[1]; j++) {
+              var cx = Math.random() * w, cy = Math.random() * h * 0.8;
+              g.fillStyle = c[0];
+              for (var k = 0; k < 6; k++) { g.beginPath(); g.arc(cx + rand(-22, 22), cy + rand(-14, 14), rand(12, 22), 0, Math.PI * 2); g.fill(); }
+            }
+          });
+        });
+      };
+      var calicoTexA = calicoTex(), calicoTexB = calicoTex();
+      var furMat = function (map) { return new THREE.MeshStandardMaterial({ map: map, roughness: 0.9, flatShading: true }); };
+      var BREEDS = {
+        black:   function () { var m = mat('#1F1B1B'); return { body: m, head: m, legs: m, tail: m, muzzle: mat('#2B2525'), earL: m, earR: m, eye: '#E8C547' }; },
+        calico:  function () { var w = mat('#F6F1E8'); return { body: furMat(calicoTexA), head: furMat(calicoTexB), legs: w, tail: mat('#E07A2F'), muzzle: w, earL: mat('#E07A2F'), earR: mat('#1F1B1B'), eye: '#D9A13A' }; },
+        bengal:  function () { var f = furMat(spotTex), l = mat('#D39A50'); return { body: f, head: furMat(spotTex), legs: l, tail: mat('#B9783A'), muzzle: mat('#F0D9B5'), earL: l, earR: l, eye: '#9BC34A' }; },
+        russian: function () { var m = mat('#7E8B9C'); return { body: m, head: m, legs: m, tail: m, muzzle: mat('#8D9AAB'), earL: m, earR: m, eye: '#5FBF7F' }; }
+      };
+      var breedOrder = ['black', 'calico', 'bengal', 'russian'];
 
       function makePerson() {
+        var breed = breedOrder[people.length % breedOrder.length], m = BREEDS[breed]();
         var root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-        var mats = [mat(pick(shirts)), mat(pick(pantsC)), mat(pick(skins)), mat('#E07A2F')];
-        var part = function (geo, m, x, y, z, parent) { var me = new THREE.Mesh(geo, m); me.position.set(x, y, z); me.castShadow = true; (parent || body).add(me); return me; };
-        var limb = function (x, y, len, w, m) { var g = new THREE.Group(); g.position.set(x, y, 0); body.add(g); part(new THREE.BoxGeometry(w, len, w), m, 0, -len / 2, 0, g); return g; };
-        var legL = limb(-0.1, 0.62, 0.6, 0.15, mats[1]), legR = limb(0.1, 0.62, 0.6, 0.15, mats[1]);
-        part(new THREE.CapsuleGeometry(0.2, 0.36, 3, 8), mats[0], 0, 0.92, 0);
-        part(new THREE.SphereGeometry(0.17, 10, 8), mats[2], 0, 1.42, 0);
-        var hair = part(new THREE.SphereGeometry(0.175, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), mat(pick(['#2A1C13', '#3E2A1E', '#5A4030', '#8A8A8A'])), 0, 1.44, -0.01);
-        hair.scale.set(1.02, 1, 1.05);
-        var armL = limb(-0.27, 1.12, 0.5, 0.1, mats[0]), armR = limb(0.27, 1.12, 0.5, 0.1, mats[0]);
-        var bag = part(new THREE.BoxGeometry(0.22, 0.24, 0.12), mats[3], 0, -0.6, 0.02, armR);
-        root.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
+        var part = function (geo, mm, x, y, z, parent) { var me = new THREE.Mesh(geo, mm); me.position.set(x, y, z); me.castShadow = true; (parent || body).add(me); return me; };
+        // 身體與頭
+        var torso = part(new THREE.CapsuleGeometry(0.25, 0.55, 4, 10), m.body, 0, 0.64, 0); torso.rotation.x = Math.PI / 2;
+        var head = new THREE.Group(); head.position.set(0, 0.95, 0.52); body.add(head);
+        part(new THREE.SphereGeometry(0.26, 14, 10), m.head, 0, 0, 0, head).scale.set(1.06, 0.92, 0.95);
+        part(new THREE.SphereGeometry(0.11, 10, 8), m.muzzle, 0, -0.07, 0.2, head).scale.set(1.35, 0.8, 0.8);
+        part(new THREE.SphereGeometry(0.032, 6, 5), mat('#E89A9A'), 0, -0.03, 0.29, head);
+        var eyeM = mat(m.eye, { emissive: m.eye, emissiveIntensity: 0.25, roughness: 0.3 }), pupilM = mat('#111111');
+        [-1, 1].forEach(function (k) {
+          part(new THREE.SphereGeometry(0.058, 10, 8), eyeM, k * 0.105, 0.04, 0.2, head);
+          part(new THREE.SphereGeometry(0.03, 8, 6), pupilM, k * 0.105, 0.04, 0.25, head).scale.set(0.6, 1.5, 0.6);
+          var ear = part(new THREE.ConeGeometry(0.1, 0.22, 4), k < 0 ? m.earL : m.earR, k * 0.15, 0.24, -0.03, head);
+          ear.rotation.z = -k * 0.3;
+        });
+        // 四隻腳（對角線同步）
+        var legs = [[-0.14, 0.32], [0.14, 0.32], [-0.14, -0.32], [0.14, -0.32]].map(function (xz) {
+          var g = new THREE.Group(); g.position.set(xz[0], 0.46, xz[1]); body.add(g);
+          part(new THREE.CylinderGeometry(0.075, 0.065, 0.46, 8), m.legs, 0, -0.23, 0, g);
+          return g;
+        });
+        // 尾巴：三節，往上彎
+        var tail = new THREE.Group(); tail.position.set(0, 0.74, -0.52); tail.rotation.x = -0.9; body.add(tail);
+        var seg = tail;
+        for (var j = 0; j < 3; j++) {
+          part(new THREE.CylinderGeometry(0.05, 0.055, 0.26, 6), m.tail, 0, 0.13, 0, seg);
+          var next = new THREE.Group(); next.position.y = 0.25; next.rotation.x = -0.35; seg.add(next); seg = next;
+        }
+        // 嘴裡叼的外帶袋
+        var bag = new THREE.Group(); bag.position.set(0, -0.14, 0.3); head.add(bag);
+        part(new THREE.BoxGeometry(0.3, 0.28, 0.14), mat('#E07A2F'), 0, -0.2, 0, bag);
+        part(new THREE.BoxGeometry(0.03, 0.1, 0.03), mat('#C2611B'), 0, -0.03, 0, bag);
         scene.add(root);
-        return { root: root, body: body, legL: legL, legR: legR, armL: armL, armR: armR, bag: bag, mats: collectMats(root) };
+        return { root: root, body: body, head: head, legs: legs, tail: tail, bag: bag, mats: collectMats(root) };
       }
       function collectMats(root) { var list = []; root.traverse(function (o) { if (o.isMesh && list.indexOf(o.material) < 0) list.push(o.material); }); return list; }
       function setOpacity(p, a) {
@@ -1445,7 +1507,7 @@
         var dir = Math.random() < 0.5 ? 1 : -1;
         var x = anywhere ? rand(-edge, edge) : -dir * edge;
         p.lane = rand(0.75, 2.7);
-        p.speed = rand(0.9, 1.35) * (p.small ? 0.9 : 1);
+        p.speed = rand(1.0, 1.5) * (p.small ? 0.85 : 1);
         p.root.position.set(x, 0, p.lane);
         p.root.visible = true; setOpacity(p, 1);
         p.bag.visible = Math.random() < 0.15;
@@ -1463,8 +1525,8 @@
       function syncCount() {
         var n = count();
         while (people.length < n) {
-          var p = makePerson(); p.small = Math.random() < 0.18;
-          if (p.small) p.root.scale.setScalar(0.72); else p.root.scale.setScalar(rand(0.93, 1.07));
+          var p = makePerson(); p.small = Math.random() < 0.2;
+          p.root.scale.setScalar(p.small ? 0.75 : rand(1.05, 1.2));
           p.phase = rand(0, 6); spawn(p, true); people.push(p);
         }
         people.forEach(function (p, idx) { p.root.visible = idx < n && p.state !== 'inside'; p.active = idx < n; });
@@ -1498,11 +1560,13 @@
         var nearDoor = Math.abs(pos.x - doorX) < 0.7 && pos.z < 0.55;
         setOpacity(p, nearDoor ? Math.max(0, Math.min(1, (pos.z + 0.3) / 0.75)) : 1);
         // 走路擺動
-        p.phase += dt * p.speed * 6.5;
+        p.phase += dt * p.speed * 8;
         var s = Math.sin(p.phase);
-        p.legL.rotation.x = s * 0.55; p.legR.rotation.x = -s * 0.55;
-        p.armL.rotation.x = -s * 0.45; p.armR.rotation.x = s * (p.bag.visible ? 0.2 : 0.45);
-        p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.04;
+        p.legs[0].rotation.x = s * 0.5; p.legs[3].rotation.x = s * 0.5;
+        p.legs[1].rotation.x = -s * 0.5; p.legs[2].rotation.x = -s * 0.5;
+        p.body.position.y = Math.abs(Math.cos(p.phase)) * 0.03;
+        p.head.rotation.x = Math.sin(p.phase * 2) * 0.04;
+        p.tail.rotation.z = Math.sin(p.phase * 0.35) * 0.35;
       }
 
       /* ---------- 尺寸與相機 ---------- */
