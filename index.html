@@ -6,6 +6,17 @@
   <title>煎心鍋貼 JIAN XIN｜金黃酥脆，傳承手藝的極致美味</title>
   <meta name="description" content="煎心鍋貼：台灣在地豬肉、每日現包、黃金煎脆比例。線上點餐、冷凍禮盒宅配、門市據點資訊。">
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#3E2A1E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="煎心鍋貼">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -1661,6 +1672,14 @@
       var refresh = function () { inView && !section.classList.contains('is-paused') ? play() : pause(); };
       section.addEventListener('street-toggle', refresh);
       new IntersectionObserver(function (entries) { inView = entries[0].isIntersecting; refresh(); }).observe(section);
+    }
+  </script>
+  <script>
+    /* PWA：註冊 Service Worker（需在 https 或 localhost 下才會啟用） */
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Service Worker 註冊失敗', e); });
+      });
     }
   </script>
 </body>
